@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+	"os/user"
 	"strings"
 )
 
@@ -30,11 +33,7 @@ func main() {
 }
 
 func get() {
-	argsWithoutProg := os.Args[1:]
-	if len(argsWithoutProg) == 1 {
-		printHelp()
-		return
-	}
+	readStorage()
 }
 
 func add() {
@@ -50,8 +49,31 @@ func printHelp() {
 	fmt.Println("gif get searchtext")
 }
 
+func readStorage() {
+	usr, _ := user.Current()
+	dir := usr.HomeDir
+	f, err := os.OpenFile(dir+"/"+filename, os.O_RDONLY, 0600)
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func appendToStorage(v string) {
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0600)
+	usr, _ := user.Current()
+	dir := usr.HomeDir
+	f, err := os.OpenFile(dir+"/"+filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		panic(err)
 	}
