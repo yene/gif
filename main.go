@@ -33,7 +33,15 @@ func main() {
 }
 
 func get() {
-	readStorage()
+	t := strings.Join(os.Args[2:], " ")
+	r := searchStorage(t)
+
+	cmd := exec.Command("/usr/bin/pbcopy")
+	cmd.Stdin = strings.NewReader(r)
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func add() {
@@ -49,7 +57,7 @@ func printHelp() {
 	fmt.Println("gif get searchtext")
 }
 
-func readStorage() {
+func searchStorage(searchtext string) string {
 	usr, _ := user.Current()
 	dir := usr.HomeDir
 	f, err := os.OpenFile(dir+"/"+filename, os.O_RDONLY, 0600)
@@ -62,12 +70,19 @@ func readStorage() {
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		fmt.Println(scanner.Text())
+		p := strings.Split(scanner.Text(), " ")
+		text := strings.Join(p[1:], " ")
+		if strings.Contains(text, searchtext) {
+			return p[0]
+		}
+
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+
+	return ""
 }
 
 func appendToStorage(v string) {
