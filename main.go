@@ -52,7 +52,7 @@ func add() {
 }
 
 func printHelp() {
-	fmt.Println("Commands:")
+	fmt.Println("Usage:")
 	fmt.Println("gif add description")
 	fmt.Println("gif get searchtext")
 }
