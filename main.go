@@ -47,7 +47,7 @@ func get() {
 func add() {
 	out, _ := exec.Command("/usr/bin/pbpaste").Output()
 	paste := string(out)
-	paste = paste + ", " + strings.Join(os.Args[2:], " ") + "\n"
+	paste = paste + " " + strings.Join(os.Args[2:], " ") + "\n"
 	appendToStorage(paste)
 }
 

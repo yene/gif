@@ -1,5 +1,5 @@
-# gif
-small utility to manage may gifs
+# GIF
+Small utility to manage may GIFs.
 
 # Todo
 - [ ] create storage
