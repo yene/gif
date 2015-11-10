@@ -3,14 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"os/user"
 	"strings"
 )
-
-var filename = "gifs.txt"
 
 func main() {
 	argsWithoutProg := os.Args[1:]
@@ -26,6 +25,9 @@ func main() {
 		return
 	case "add":
 		add()
+		return
+	case "export":
+		export()
 		return
 	}
 	printHelp()
@@ -51,6 +53,28 @@ func add() {
 	appendToStorage(paste)
 }
 
+func export() {
+	f, err := os.OpenFile(storagePath(), os.O_RDONLY, 0600)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	md := ""
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		p := strings.Split(scanner.Text(), " ")
+		text := strings.Join(p[1:], " ")
+		md += "[" + text + "](" + p[0] + ")\n"
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	ioutil.WriteFile(os.Args[2], []byte(md), 0644)
+}
+
 func printHelp() {
 	fmt.Println("Usage:")
 	fmt.Println("gif add description")
@@ -58,14 +82,10 @@ func printHelp() {
 }
 
 func searchStorage(searchtext string) string {
-	usr, _ := user.Current()
-	dir := usr.HomeDir
-	f, err := os.OpenFile(dir+"/"+filename, os.O_RDONLY, 0600)
-
+	f, err := os.OpenFile(storagePath(), os.O_RDONLY, 0600)
 	if err != nil {
 		panic(err)
 	}
-
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
@@ -75,7 +95,6 @@ func searchStorage(searchtext string) string {
 		if strings.Contains(text, searchtext) {
 			return p[0]
 		}
-
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -86,9 +105,7 @@ func searchStorage(searchtext string) string {
 }
 
 func appendToStorage(v string) {
-	usr, _ := user.Current()
-	dir := usr.HomeDir
-	f, err := os.OpenFile(dir+"/"+filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	f, err := os.OpenFile(storagePath(), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		panic(err)
 	}
@@ -98,4 +115,11 @@ func appendToStorage(v string) {
 	if _, err = f.WriteString(v); err != nil {
 		panic(err)
 	}
+}
+
+func storagePath() string {
+	var filename = "gifs.txt"
+	usr, _ := user.Current()
+	dir := usr.HomeDir
+	return dir + "/" + filename
 }
